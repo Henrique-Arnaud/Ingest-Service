@@ -4,6 +4,8 @@ This repository contains the implementation of the Ingest Service as part of a t
 
 The implementation favors a modular monolith and the official MongoDB Node.js driver to keep the code easy to follow. MongoDB provides durable event storage and work claiming, so no separate message broker is required for the current scope.
 
+The current application was run and tested locally using Docker on a macbook pro 2021 M1 chip, on a 2 cpu and 1.5gb ram docker machine.
+
 ## Run locally
 
 Docker and Docker Compose are the only requirements for the standard workflow:

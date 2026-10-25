@@ -27,32 +27,26 @@ The project is a modular monolith. The HTTP API, worker, and repository are
 modules in the same NestJS process. MongoDB serves as both durable event store
 and work queue.
 
-```text
-Client
-  │ POST /events
-  ▼
-EventsController ── DTO validation
-  │
-  ▼
-EventsService ── deterministic eventKey
-  │
-  ▼
-EventsRepository ── insert pending event ──► MongoDB events collection
-  │                                               │
-  └── HTTP 202                                    │ worker polling
-                                                  ▼
-                                          claim oldest eligible
-                                          event per patient
-                                                  │ lease + token
-                                                  ▼
-                                          EventHandler (simulated)
-                                                  │ output
-                                                  ▼
-                                          transactional commitReplay
-                                          ├─ verify lease/token
-                                          ├─ mark current event processed
-                                          ├─ replay affected state tail
-                                          └─ write snapshots atomically
+```mermaid
+flowchart TD
+    client["Client"]
+    controller["EventsController<br/>DTO validation"]
+    service["EventsService<br/>Deterministic eventKey"]
+    repository["EventsRepository"]
+    mongo[("MongoDB events collection")]
+    claim["Claim oldest eligible event per patient"]
+    handler["EventHandler (simulated)"]
+    commit["Transactional commitReplay<br/>Verify lease/token<br/>Mark current event processed<br/>Replay affected state tail<br/>Write snapshots atomically"]
+
+    client -->|POST /events| controller
+    controller --> service
+    service --> repository
+    repository -->|Insert pending event| mongo
+    repository -->|HTTP 202 after durable storage| client
+    mongo -->|Worker polling| claim
+    claim -->|Lease + token| handler
+    handler -->|Output| commit
+    commit -->|Atomic writes| mongo
 ```
 
 This avoids an extra broker and a dual-write problem: the accepted event and
