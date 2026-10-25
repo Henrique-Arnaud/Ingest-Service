@@ -4,10 +4,10 @@ import { CreateEventDto } from './dto/create-event.dto.js';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly service: EventsService) {}
+  constructor(private readonly service: EventsService) { }
   @Post()
   @HttpCode(202)
   ingest(@Body() dto: CreateEventDto): Promise<any> {
-    return Promise.resolve({ message: 'Event ingested' });
+    return this.service.ingest(dto);
   }
 }
